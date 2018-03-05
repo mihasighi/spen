@@ -459,7 +459,7 @@ noll_graph_is_ptosrc (noll_graph_t * g, uint_t n)
   noll_uid_array *n_edges = g->mat[n];
   if (n_edges == NULL)
     return false;
-  for (uint i = 0; i < noll_vector_size (n_edges); i++)
+  for (uint_t i = 0; i < noll_vector_size (n_edges); i++)
     {
       uid_t eid = noll_vector_at (n_edges, i);
       noll_edge_t *ei = noll_vector_at (g->edges, eid);
@@ -578,7 +578,7 @@ noll_graph_dll (noll_graph_t * g, uid_t pid)
   noll_edge_array *e1_en = noll_edge_array_new ();
   // the first valid identifier for the added edges
   uint_t lst_eid = noll_vector_size (g->edges);
-  for (uint ei = 0; ei < noll_vector_size (g->edges); ei++)
+  for (uint_t ei = 0; ei < noll_vector_size (g->edges); ei++)
     {
       noll_edge_t *e = noll_vector_at (g->edges, ei);
       if (e->kind != NOLL_EDGE_PRED)
@@ -630,7 +630,7 @@ noll_graph_dll (noll_graph_t * g, uid_t pid)
       noll_uid_array_push (prv_edges, eprev->id);
     }
   // push all the added edges in g
-  for (uint ei = 0; ei < noll_vector_size (e1_en); ei++)
+  for (uint_t ei = 0; ei < noll_vector_size (e1_en); ei++)
     {
       noll_edge_t *e = noll_vector_at (e1_en, ei);
       noll_edge_array_push (g->edges, e);

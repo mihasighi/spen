@@ -932,7 +932,7 @@ noll_pure_check_entl (bool ** diff, uint_t dsize, noll_pure_t * f,
 /**
  * @brief Check that constraints on data variables from @p df1 entail @p df2 .
  */
-uint ndform = 0;
+uint_t ndform = 0;
 int
 noll_dform_array_check_entl (noll_var_array * lv1, noll_dform_array * df1,
                              noll_var_array * lv2, noll_uid_array * m,

@@ -239,7 +239,7 @@ noll_graph_of_space (noll_space_t * phi, bool isMatrix,
                     noll_uid_array *args2 = noll_uid_array_new ();
                     noll_uid_array_reserve (args2, pred->def->fargs);
                     noll_uid_array_push (args2, 0);
-                    for (uint i = 0; i < pred->def->fargs; i++)
+                    for (uint_t i = 0; i < pred->def->fargs; i++)
                       {
                         uint_t avi = noll_vector_at (phi->m.ls.args, i);
                         assert (avi < noll_vector_size (g->lvars));

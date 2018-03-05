@@ -295,13 +295,13 @@ noll_uid_array_compose (noll_uid_array * dst, noll_uid_array * src)
   assert (src != NULL);
   assert (noll_vector_size (dst) == noll_vector_size (src));
   // check that mappings agree on defined values
-  for (uint i = 0; i < noll_vector_size (dst); i++)
+  for (uint_t i = 0; i < noll_vector_size (dst); i++)
     if ((noll_vector_at (dst, i) != UNDEFINED_ID) &&
         (noll_vector_at (src, i) != UNDEFINED_ID) &&
         (noll_vector_at (dst, i) != noll_vector_at (src, i)))
       return NULL;
   // composition can be done
-  for (uint i = 0; i < noll_vector_size (dst); i++)
+  for (uint_t i = 0; i < noll_vector_size (dst); i++)
     if ((noll_vector_at (dst, i) == UNDEFINED_ID) &&
         (noll_vector_at (src, i) != UNDEFINED_ID))
       noll_vector_at (dst, i) = noll_vector_at (src, i);
@@ -1325,12 +1325,12 @@ noll_shom_match_form_pto (noll_graph_t * g2, uid_t eid1,
       return NULL;
     }
   // TODO: improve the complexity!
-  for (uint fi = 0; fi < noll_vector_size (fpto->m.pto.fields); fi++)
+  for (uint_t fi = 0; fi < noll_vector_size (fpto->m.pto.fields); fi++)
     {
       uid_t fid = noll_vector_at (fpto->m.pto.fields, fi);
       // search the edge from nsrc with label fid
       bool found = false;
-      for (uint i2 = 0;
+      for (uint_t i2 = 0;
            i2 < noll_vector_size (edges_nsrc) && (found == false); i2++)
         {
           uid_t eid2 = noll_vector_at (edges_nsrc, i2);
@@ -1368,7 +1368,7 @@ noll_shom_match_form_pto (noll_graph_t * g2, uid_t eid1,
         }
     }
   // matching succeeded, update m and return res
-  for (uint i = 0; i < noll_vector_size (lmap); i++)
+  for (uint_t i = 0; i < noll_vector_size (lmap); i++)
     {
       uid_t vi = noll_vector_at (lmap, i);
       if (noll_vector_at (m, vi) == UNDEFINED_ID)
@@ -1460,7 +1460,7 @@ noll_shom_match_form_rd_list (noll_graph_t * g2,
   noll_uid_array_copy (used_res, used);
   noll_dform_array *dfnew = noll_dform_array_new ();
   assert (f->kind == NOLL_SPACE_SSEP);
-  for (uint i = 0; i < noll_vector_size (f->m.sep); i++)
+  for (uint_t i = 0; i < noll_vector_size (f->m.sep); i++)
     {
       noll_space_t *si = noll_vector_at (f->m.sep, i);
       assert(si->kind == NOLL_SPACE_LS || si->kind == NOLL_SPACE_PTO);
@@ -1547,7 +1547,7 @@ noll_shom_match_form_rd_list_1 (noll_graph_t * g2,
   noll_uid_array_copy (used_res, used);
   noll_dform_array *dfnew = noll_dform_array_new ();
   assert (f->kind == NOLL_SPACE_SSEP);
-  for (uint i = 0; i < noll_vector_size (f->m.sep); i++)
+  for (uint_t i = 0; i < noll_vector_size (f->m.sep); i++)
     {
       noll_space_t *si = noll_vector_at (f->m.sep, i);
       assert (si->kind == NOLL_SPACE_LS);
@@ -1666,14 +1666,14 @@ noll_shom_match_rule_rec (noll_graph_t * g2, uid_t eid1,
   uint_t exvars_size_old = noll_vector_size (exvars);
   /// keep positions of these new X in @p exvars by extending @p args
   noll_uid_array *lmap = noll_uid_map_copy (args, true);        /// add 'nil'
-  for (uint i = rule->fargs + 1; i < noll_vector_size (rule->vars); i++)
+  for (uint_t i = rule->fargs + 1; i < noll_vector_size (rule->vars); i++)
     {
       /// create a new var from Xi
       noll_var_t *xi = noll_vector_at (rule->vars, i);
       noll_var_t *lxi = noll_var_copy (xi);
       /// change the name to make it unique
       free (lxi->vname);
-      uint sz = strlen (xi->vname) + 2;
+      uint_t sz = strlen (xi->vname) + 2;
       lxi->vname = (char *) malloc (sz * sizeof (char));
       snprintf (lxi->vname, sz, "%s%d", xi->vname, level + 1);
       /// map lxi to last position in exvars
@@ -1913,7 +1913,7 @@ noll_shom_match_lemma (noll_graph_t * g2, uid_t eid1,
   uint_t exvars_size_old = noll_vector_size (exvars);
   /// keep positions of these new X in @p exvars by extending @p args
   noll_uid_array *lmap = noll_uid_map_copy (args, true);        // add 'nil'
-  for (uint i = lemma->rule.fargs + 1;
+  for (uint_t i = lemma->rule.fargs + 1;
        i < noll_vector_size (lemma->rule.vars); i++)
     {
       /// create a new var from Xi
@@ -1921,7 +1921,7 @@ noll_shom_match_lemma (noll_graph_t * g2, uid_t eid1,
       noll_var_t *lxi = noll_var_copy (xi);
       /// change the name to make it unique
       free (lxi->vname);
-      uint sz = strlen (xi->vname) + 2;
+      uint_t sz = strlen (xi->vname) + 2;
       lxi->vname = (char *) malloc (sz * sizeof (char));
       snprintf (lxi->vname, sz, "%s%d", xi->vname, level + 1);
       /// map lxi to last position in exvars
@@ -2199,7 +2199,7 @@ noll_shom_match_rd (noll_graph_t * g2, uid_t eid1,
   /// apply to @p args the maping @p m to obtain the edge constraints
   noll_uid_array *args2 = noll_uid_array_new ();
   noll_uid_array_reserve (args2, noll_vector_size (args));
-  for (uint i = 0; i < noll_vector_size (args); i++)
+  for (uint_t i = 0; i < noll_vector_size (args); i++)
     noll_uid_array_push (args2, noll_vector_at (m, noll_vector_at (args, i)));
   uint_t eid2 = noll_graph_get_edge (g2, NOLL_EDGE_PRED, pid, args2, dfnew);
   if (eid2 != UNDEFINED_ID)
@@ -2363,12 +2363,12 @@ noll_shom_check_syn (noll_graph_t * g2,
   /// m is a mapping from exvars to nodes or UNDEFINED_ID
   noll_uid_array *m = noll_uid_array_new ();
   noll_uid_array_reserve (m, noll_vector_size (g2->lvars));
-  for (uint i = 0; i < noll_vector_size (g2->lvars); i++)
+  for (uint_t i = 0; i < noll_vector_size (g2->lvars); i++)
     noll_uid_array_push (m, g2->var2node[i]);
   /// args will give the position of pred args in exvars
   noll_uid_array *args = noll_uid_array_new ();
   noll_uid_array_reserve (args, p->def->fargs);
-  for (uint i = 0; i < p->def->fargs; i++)
+  for (uint_t i = 0; i < p->def->fargs; i++)
     {
       uint_t ni = noll_vector_at (args2, i);
       uint_t vi = noll_graph_get_var (g2, ni);
@@ -2430,7 +2430,7 @@ noll_shom_check_syn (noll_graph_t * g2,
   noll_uid_array *mg2 = noll_uid_array_new ();
   noll_uid_array_reserve (mg2, noll_vector_size (m));
   noll_uid_array_push (mg2, 0); /// 'nil' mapped to 0 = 'nil'
-  for (uint i = 1; i < noll_vector_size (m); i++)
+  for (uint_t i = 1; i < noll_vector_size (m); i++)
     {
       uint_t ni = noll_vector_at (m, i);
       uint_t vi = UNDEFINED_ID;

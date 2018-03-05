@@ -603,7 +603,7 @@ noll_pred_type_rule_pure (noll_pred_t * p, uint_t level, noll_pure_t * form)
   uid_t vidBPend = UNDEFINED_ID;
   uid_t vidIRoot = UNDEFINED_ID;
   uid_t vidIPend = UNDEFINED_ID;
-  for (uint i = 0; i < p->def->fargs; i++)
+  for (uint_t i = 0; i < p->def->fargs; i++)
     switch (noll_vector_at (p->typ->argkind, i))
       {
       case NOLL_ATYP_LROOT:
@@ -1251,7 +1251,7 @@ noll_pred_type_fprint (FILE * f, noll_pred_typing_t * typ)
       break;
     }
   fprintf (f, " argkind=[");
-  for (uint i = 0; i < noll_vector_size (typ->argkind); i++)
+  for (uint_t i = 0; i < noll_vector_size (typ->argkind); i++)
     fprintf (f, "%d: %d,", i, noll_vector_at (typ->argkind, i));
   fprintf (f, "]\n");
 
