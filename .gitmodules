@@ -1,3 +1,4 @@
 [submodule "tool/libvata"]
 	path = libvata
 	url = https://github.com/ondrik/libvata.git
+	branch = master

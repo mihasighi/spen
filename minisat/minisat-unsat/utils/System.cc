@@ -89,6 +89,8 @@ double Minisat::memUsed(void) {
     malloc_zone_statistics(NULL, &t);
     return (double)t.max_size_in_use / (1024*1024); }
 
+double Minisat::memUsedPeak(void) { return memUsed(); }
+
 #else
 double Minisat::memUsed() { 
     return 0; }
