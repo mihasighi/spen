@@ -1662,6 +1662,7 @@ noll2sat_membership (noll_sat_t * fsat)
       uint_t pid_i = noll_vector_at (fsat->var_pred, i)->forig->m.ls.pid;
       uint_t x_i = noll_vector_at (noll_vector_at (fsat->var_pred,
                                                    i)->forig->m.ls.args, 0);
+      if (x_i == 0) /* nil */ continue;
       uint_t alpha_i = noll_vector_at (fsat->var_pred, i)->forig->m.ls.sid;
 #ifndef NDEBUG
       fprintf (stdout, "---- predicate %s implies %s in %s\n",

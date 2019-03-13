@@ -866,7 +866,7 @@ noll_entl_solve (void)
   noll_entl_type ();
 
 #ifndef NDEBUG
-  fprintf (stdout, "\n*** noll_entl_solve: after typing problem:\n");
+  fprintf (stdout, "\n*** noll_entl_solve: after typing:\n");
   noll_records_array_fprint (stdout, "records:");
   noll_fields_array_fprint (stdout, "fields:");
   noll_pred_array_fprint (stdout, preds_array, "predicates:");

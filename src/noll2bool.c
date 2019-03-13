@@ -169,12 +169,17 @@ encode_pto_nodest (uint_t x, uint_t f, uint_t alpha)
 int
 encode_member (uint_t x, uint_t alpha)
 {
-  //printf("Member: x:%d, alpha:%d\n",x,alpha);
+#ifndef NDEBUG
+  fprintf(stdout, "Member: x:%d, alpha:%d --> ",x,alpha);
+#endif
   if (var_member[x][alpha] == -1)
     {
       var_member[x][alpha] = max;
       max++;
     }
+#ifndef NDEBUG
+  fprintf(stdout, "%d\n",var_member[x][alpha]);
+#endif
   return var_member[x][alpha];
 }
 
@@ -326,8 +331,9 @@ bool_abstr_space (noll_form_t * form, FILE * out)
       if (noll_pred_is_one_dir (pid))
         {
           uint_t var_eq = encode_eq (source, dest);
-
+          /* /\ (pred \/ (source == dest)) */
           fprintf (out, "%d %d 0\n", var, var_eq);
+          /* /\ (!pred \/ (source != dest)) */
           fprintf (out, "-%d -%d 0\n", var, var_eq);
           nb_clauses += 2;
         }
@@ -419,7 +425,8 @@ bool_abstr_space (noll_form_t * form, FILE * out)
                           //   there exists no location which belongs to both of them
                           //   (could be improved by checking the type of the location variable
                           //    vs the type of the set variable)
-                          for (uint_t sii = 0; sii
+                          // FIX: except nil
+                          for (uint_t sii = 1; sii
                                < noll_vector_size (form->lvars); sii++)
                             {
                               fprintf (out, "-%d -%d 0\n",

@@ -520,7 +520,8 @@ noll_pure_add_eq (noll_pure_t * f, uid_t v1, uid_t v2)
 {
   assert (f && f->m);
   if (v1 == v2)
-    return NOLL_FORM_SAT;
+    /* return NOLL_FORM_SAT; */
+    return NOLL_FORM_VALID;
   uid_t l = (v1 < v2) ? v1 : v2;
   uid_t c = (v1 < v2) ? v2 : v1;
 
