@@ -925,6 +925,121 @@ noll_shom_select_wf_0 (noll_graph_t * g2, noll_graph_t * sg2,
 }
 
 /**
+ * Build allocation status for each node of the graph.
+ * Required by the well-formed condition.
+ */
+int*
+noll_shom_get_pending(noll_graph_t * g) 
+{
+  assert (NULL != g);
+  
+  int* pendg = (int*) malloc(sizeof(int) * g->nodes_size);
+  for (uint_t i = 0; i < g->nodes_size; i++) 
+    pendg[i] = 1;
+  int* isdll = (int*) malloc(sizeof(int) * noll_vector_size (g->edges));
+  for (uint_t i = 0; i < noll_vector_size (g->edges); i++)
+    isdll[i] = 0;
+  int chg = 0;
+  for (uint_t eid = 0; eid < noll_vector_size (g->edges); eid++)
+  {  
+    noll_edge_t *ei = noll_vector_at (g->edges, eid);
+    if (ei->kind == NOLL_EDGE_PRED) {
+      isdll[eid] = (0 == strncmp (noll_pred_name (ei->label),
+                                    "dll", 3)) ? 1 : 0;
+      continue;
+    } else if (ei->kind != NOLL_EDGE_PTO)
+      continue;
+    uint_t nsrc = noll_vector_at (ei->args, 0);
+    pendg[nsrc] = 0;
+    chg = 1;
+  }
+  while (chg == 1) {
+    chg = 0;
+    for (uint_t eid = 0; eid < noll_vector_size (g->edges); eid++) 
+    {
+      noll_edge_t *ei = noll_vector_at (g->edges, eid);
+      if (ei->kind != NOLL_EDGE_PRED)
+	continue;
+      uint_t nsrc = noll_vector_at (ei->args, 0);
+      uint_t ndst = noll_vector_at (ei->args, 1 + isdll[eid]);
+      if (pendg[ndst] == 0 && pendg[nsrc] == 1) {
+	pendg[nsrc] = 0;
+	chg = 1;
+      }
+    }
+  }
+  free (isdll);
+  return pendg;
+}
+
+/* weaker condition for WF 1: working only for predicates with no inner loop like ls
+ * the nodes of sg2 not used in args2 shall be not pending
+ */
+int
+noll_shom_select_wf_1_aux (noll_graph_t * g2, noll_graph_t * sg2, int* pendg2,
+                           noll_uid_array * args2)
+{
+  assert (NULL != sg2);
+  assert (NULL != g2);
+  assert (NULL != args2);
+
+  /* bit set of nodes in sg2 selected */
+  uint_t vg_size = g2->nodes_size;
+  int *vg = (int *) malloc (vg_size * sizeof (int));
+  for (uint_t i = 0; i < vg_size; i++)
+    vg[i] = -1;                 /* not marked */
+  vg[0] = 0; /* nil always marked as border */
+  /* mark nodes in the selection using edges selected */
+  for (uint_t eid2 = 0; eid2 < noll_vector_size (sg2->edges); eid2++)
+    {
+      noll_edge_t *e2 = noll_vector_at (sg2->edges, eid2);
+      if (e2->kind != NOLL_EDGE_PTO && e2->kind != NOLL_EDGE_PRED)
+        continue;
+      
+      uint_t ni = noll_vector_at (e2->args, 0);
+      uint_t vi = noll_graph_get_var (sg2, ni);
+      noll_type_t *ty_v = noll_var_type (sg2->lvars, vi);
+      vg[ni] = (e2->kind == NOLL_EDGE_PTO) ? 3 : 1; /* allocated or only selected */
+      for (uint_t i = 1; i < noll_vector_size (e2->args); i++) {
+        ni = noll_vector_at (e2->args, i);
+        vi = noll_graph_get_var (sg2, ni);
+        ty_v = noll_var_type (sg2->lvars, vi);
+        if (ty_v->kind != NOLL_TYP_RECORD)
+          continue;
+        vg[ni] = (vg[ni] > 0) ? vg[ni] : 1; /* selected */
+      }
+    }
+  /* mark nodes in the edge mapped */
+  uint_t nsrc = noll_vector_at (args2, 0);
+  vg[nsrc] = 0; /* source of selection */
+  for (uint_t i = 1; i < noll_vector_size (args2); i++) {
+    uint_t ni = noll_vector_at (args2, i);
+    uint_t vi = noll_graph_get_var (g2, ni);
+    noll_type_t *ty_v = noll_var_type (g2->lvars, vi);
+    if (ty_v->kind == NOLL_TYP_RECORD)
+      vg[ni] = 2; /* border */
+  }
+  int result = 1;
+  /* go through the nodes and
+   * check non-aliasing of local nodes (marked 1) with external nodes*/
+  for (uint_t ni = 1; ni < vg_size && result == 1; ni++) {
+    if (vg[ni] == 1 && pendg2[ni] == 1) { /* selected but nor allocated */
+      /* weaker version */
+      if (noll_graph_is_diff(g2, ni, nsrc) == false) {
+#ifndef NDEBUG
+          fprintf (stdout, "\n !!!! possibly pending node %d ==> non wf_1 !!!!\n", ni);
+	  /* fprintf (stdout, "\n !!!! possibly aliasing nodes %d and %d ==> non wf_1 !!!!\n", ni, mi); */
+#endif
+          result = 0;
+      } 
+    }
+  }
+
+  free(vg);
+  return result;
+}
+
+/**
  * Check well-formedness condition 1 
  * for the graph selected @p sg2 wrt @p g2, i.e.,
  * for any predicate edge P(E,F,...) in sg2, 
@@ -932,12 +1047,13 @@ noll_shom_select_wf_0 (noll_graph_t * g2, noll_graph_t * sg2,
  *          (for dll check args2[2] and args[3] allocated or nil)
  * @param g2    the origin of the selection
  * @param sg2   the selected graph
+ * @param pendg2 the pending information on nodes of g2
  * @param args2 the arguments (nodes) of e1 maped with the homeomorphism
  * @param isdll 1 if is a dll pred
  * @return      1 if well-formed, 0 otherwise
  */
 int
-noll_shom_select_wf_1 (noll_graph_t * g2, noll_graph_t * sg2,
+noll_shom_select_wf_1 (noll_graph_t * g2, noll_graph_t * sg2, int* pendg2,
                        noll_uid_array * args2, int isdll)
 {
   assert (NULL != sg2);
@@ -1010,9 +1126,9 @@ noll_shom_select_wf_1 (noll_graph_t * g2, noll_graph_t * sg2,
         }
     }
 #ifndef NDEBUG
-  NOLL_DEBUG ("\n++++ select_wf_1: NYI!\n");
+  NOLL_DEBUG ("\n++++ select_wf_1: allocated boundary nodes!\n");
 #endif
-  return 1;
+  return noll_shom_select_wf_1_aux (g2, sg2, pendg2, args2);
 }
 
 /**
@@ -1105,14 +1221,14 @@ noll_shom_select_wf_2 (noll_graph_t * g2, noll_graph_t * sg2,
 
 /**
  * Check well-formedness for the graphs selected &param sg2 wrt g2.
- * @param g2    the selection
+ * @param g2    the origin of the selection
  * @param sg2   the selection
  * @param args2 the arguments (nodes) of e1 maped with the homeomorphism
  * @param isdll 1 if is a dll pred
  * @return      1 if well-formed, 0 otherwise
  */
 int
-noll_shom_select_wf (noll_graph_t * g2, noll_graph_t * sg2,
+noll_shom_select_wf (noll_graph_t * g2, noll_graph_t * sg2, int* pendg2,
                      noll_uid_array * args2, int isdll)
 {
   assert (NULL != sg2);
@@ -1129,7 +1245,7 @@ noll_shom_select_wf (noll_graph_t * g2, noll_graph_t * sg2,
    * for any predicate edge P(E,F,...) in sg2, 
    *   check that (g2 \ sg2) /\ E != F ==> args2[1+isdll] allocated or nil 
    */
-  res = noll_shom_select_wf_1 (g2, sg2, args2, isdll);
+  res = noll_shom_select_wf_1 (g2, sg2, pendg2, args2, isdll);
   if (res == 0)
     return res;
   /* check wf condition 2: 
@@ -2473,7 +2589,7 @@ shom_check_syn_return:
  * such that the labeling with fields is respected.
  * Mark the mapped edges of @p g2 in usedg2.
  *
- * The graphs is the @return are subgraphs of g2
+ * The graphs in the result are subgraphs of g2
  * such that they contain only the edges mapped.
  *
  * @param g1     domain graph for the homeomorphism (in)
@@ -2494,7 +2610,13 @@ noll_graph_array *noll_shom_build_rd
   /* initialize the result with undefined identifiers */
   noll_graph_array *ls_hom = noll_graph_array_new ();
   noll_graph_array_reserve (ls_hom, noll_vector_size (g1->edges));
-  /* Go through the predicate edges of g1 such that
+  /* 
+   * Compute the allocation information for nodes in g2
+   * required by wf test.
+   */
+  int* pendg2 = noll_shom_get_pending(g2);
+  /* 
+   * Go through the predicate edges of g1 such that
    * edges with greatest predicate are visited first
    */
   /* sort the predicate edges of g1 using insertion sort */
@@ -2572,7 +2694,7 @@ noll_graph_array *noll_shom_build_rd
       /* check well-formedness of the selection */
       uint_t isdll = (0 == strncmp (noll_pred_name (e1->label),
                                     "dll", 3)) ? 1 : 0;
-      if (0 == noll_shom_select_wf (g2, sg2, args2, isdll))
+      if (0 == noll_shom_select_wf (g2, sg2, pendg2, args2, isdll))
         {                       /* free the allocated memory */
           noll_graph_array_delete (ls_hom);
           ls_hom = NULL;
@@ -2659,6 +2781,7 @@ noll_graph_array *noll_shom_build_rd
 
 return_shom_ls:
   free (t);
+  free (pendg2);
   return ls_hom;
 }
 

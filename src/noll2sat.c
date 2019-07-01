@@ -1616,9 +1616,9 @@ noll2sat_membership (noll_sat_t * fsat)
       uint_t alpha_i = noll_vector_at (fsat->var_inset, i)->alpha;
       noll_type_t *types_alpha_i =
         noll_vector_at (fsat->form->svars, alpha_i)->vty;
-      for (uint_t x_j = 1; x_j < x_i; x_j++)
+      for (uint_t x_j = 1; x_j < noll_vector_size (fsat->form->lvars); x_j++)
         {
-          if (fsat->finfo->used_lvar[x_j] == true)
+          if (x_j != x_i && fsat->finfo->used_lvar[x_j] == true)
             {
               noll_type_t *typ_xj = noll_var_type (fsat->form->lvars, x_j);
               assert (typ_xj != NULL);
@@ -1957,8 +1957,9 @@ noll2sat_det_pto_nil (noll_sat_t * fsat)
 
 /*
  * write F_det ([x_i,f,y_i], [P,alpha(x_j,y_j,_)]) =
- *          for all f in Fields0(P) and x in phi
- *              [x_i = x] & [x in alpha] ==> [x_i,f,y_i] xor [P,alpha(x_j,y_j,_)]
+ *          for all f in Fields0(P) and x_k in phi
+ *          (old) [x_i = x_k] & [x_k in alpha] ==> [x_i,f,y_i] xor [P,alpha(x_j,y_j,_)]
+ *              [x_i = x_k] & [x_i,f,y_i] ==> ![x_k in alpha]
  */
 int
 noll2sat_det_pto_pred (noll_sat_t * fsat)
@@ -2003,10 +2004,10 @@ noll2sat_det_pto_pred (noll_sat_t * fsat)
                                                             x_k);
                   uid_t bvar_in_k_j = noll2sat_get_bvar_in (fsat, x_k,
                                                             alpha_j);
-                  fprintf (fsat->file, "-%d -%d %d %d 0\n", bvar_eq_i_k,
+                  fprintf (fsat->file, "-%d -%d %d -%d 0\n", bvar_eq_i_k,
                            bvar_in_k_j, fsat->start_pto + i,
-                           fsat->start_pred + j);
-                  fprintf (fsat->file, "-%d -%d -%d -%d 0\n", bvar_eq_i_k,
+                           fsat->start_pred + j); 
+		  fprintf (fsat->file, "-%d -%d -%d %d 0\n", bvar_eq_i_k,
                            bvar_in_k_j, fsat->start_pto + i,
                            fsat->start_pred + j);
                   nb_clauses += 2;
@@ -2020,8 +2021,10 @@ noll2sat_det_pto_pred (noll_sat_t * fsat)
  * write F_det ([P,alpha(x_i,_)], [Q,beta(x_j,_)]) =
  *          if Fields0(P) /\ Fields0(Q) != 0 then
  *            for all x1, x2 in usedvar(phi) s.t. type(x1)=type(x2)=type0(P)
- *              [x1 = x2] & [x1 in alpha] & [x2 in beta] ==>
+ *            (old)  [x1 = x2] & [x1 in alpha] & [x2 in beta] ==>
  *                      [P,alpha(x_i,_)] xor [Q,beta(x_j,_)]
+ *              [x1 = x2] & [x1 in alpha] => ![x2 in beta] 
+ *              [x1 = x2] & [x1 in beta]  => ![x2 in alpha] 
  */
 int
 noll2sat_det_pred_pred (noll_sat_t * fsat)
@@ -2091,9 +2094,14 @@ noll2sat_det_pred_pred (noll_sat_t * fsat)
                     uint_t bvar_in_2_j = noll2sat_get_bvar_in (fsat, x2,
                                                                alpha_j);
                     assert (bvar_in_2_j != 0);
-                    fprintf (fsat->file, "-%d -%d -%d -%d -%d 0\n",
+                    /* fprintf (fsat->file, "-%d -%d -%d -%d -%d 0\n",
                              bvar_in_1_i, bvar_in_2_j, bvar_eq_1_2,
-                             fsat->start_pred + i, fsat->start_pred + j);
+                             fsat->start_pred + i, fsat->start_pred + j); */
+                    fprintf (fsat->file, "-%d -%d -%d 0\n",
+                             bvar_eq_1_2, bvar_in_1_i, bvar_in_2_j);
+                    nb_clauses++;
+                    fprintf (fsat->file, "-%d -%d -%d 0\n",
+                             bvar_eq_1_2, bvar_in_2_j, bvar_in_1_i);
                     nb_clauses++;
                   }
             }

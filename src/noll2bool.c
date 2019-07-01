@@ -1161,43 +1161,43 @@ bool_abstr_det (noll_form_t * form, FILE * out)
       {
         if (common_fields[var_ls[i].predicate->pid][var_ls[j].predicate->pid])
           {
-            uint_t svar1 = var_ls[i].predicate->sid;
-            uint_t svar2 = var_ls[j].predicate->sid;
-            uint_t pred1 = var_ls[i].predicate->pid;
-            uint_t pred2 = var_ls[j].predicate->pid;
-            const noll_pred_t *pred1p =
+            uint_t svari = var_ls[i].predicate->sid;
+            uint_t svarj = var_ls[j].predicate->sid;
+            uint_t predi = var_ls[i].predicate->pid;
+            uint_t predj = var_ls[j].predicate->pid;
+            const noll_pred_t *predip =
               noll_pred_getpred (var_ls[i].predicate->pid);
-            assert (NULL != pred1p);
-            const noll_pred_t *pred2p =
+            assert (NULL != predip);
+            const noll_pred_t *predjp =
               noll_pred_getpred (var_ls[j].predicate->pid);
-            assert (NULL != pred2p);
+            assert (NULL != predjp);
             /* MS: change of fields infos */
-            uint_t type1 = pred1p->typ->ptype0;
-            uint_t type2 = pred2p->typ->ptype0;
-            assert (type1 == type2);
+            uint_t typei = predip->typ->ptype0;
+            uint_t typej = predjp->typ->ptype0;
+            assert (typei == typej);
             for (uint_t k = 0; k < form->pure->size; k++)
               for (uint_t t = k + 1; t < form->pure->size; t++) // MS: why not t = k ?
                 if ((noll_vector_at
                      (noll_vector_at (form->lvars, k)->vty->args,
                       0) == noll_vector_at (noll_vector_at (form->lvars,
                                                             t)->vty->args, 0))
-                    && (type1 ==
+                    && (typei ==
                         noll_vector_at (noll_vector_at (form->lvars, k)->
                                         vty->args, 0)))
                   {
 #ifndef NDEBUG
                     fprintf (stdout,
                              "Pred1: %s, Pred2: %s, Var1: %s, Var2: %s\n",
-                             noll_pred_getpred (pred1)->pname,
-                             noll_pred_getpred (pred2)->pname,
+                             noll_pred_getpred (predi)->pname,
+                             noll_pred_getpred (predj)->pname,
                              noll_vector_at (form->lvars, k)->vname,
                              noll_vector_at (form->lvars, t)->vname);
 #endif
                     /*fprintf(out, "-%d -%d -%d %d %d 0\n",
-                       encode_member(k, svar1), encode_member(t,
-                       svar1), encode_eq(k, t), // MS: svar2
+                       encode_member(k, svari), encode_member(t,
+                       svari), encode_eq(k, t), 
                        var_ls[i].index, var_ls[j].index); */
-                    fprintf (out, "-%d -%d -%d -%d -%d 0\n", encode_member (k, svar1), encode_member (t, svar2), encode_eq (k, t),      // MS: svar2
+                    fprintf (out, "-%d -%d -%d -%d -%d 0\n", encode_member (k, svari), encode_member (t, svarj), encode_eq (k, t),
                              var_ls[i].index, var_ls[j].index);
                     nb_clauses += 1;
                   }

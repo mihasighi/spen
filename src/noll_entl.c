@@ -727,7 +727,7 @@ noll_entl_to_hom (void)
 
   res = noll_hom_build ();
   if (noll_option_get_verb () > 0)
-    fprintf (stdout, "    homeomorphism found\n");
+    fprintf (stdout, "    homeomorphism %s found\n", (res == 1) ? "" : "not");
   if (noll_option_is_diag () == true)
     {
       if (noll_option_get_verb () > 0)

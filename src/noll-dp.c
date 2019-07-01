@@ -44,7 +44,7 @@ print_help (void)
  * Entry of the decision procedure.
  * @requires: only one problem per file
  *
- * Call: noll-dp [-n|-b|-o|-o1|-o2] file.smt2
+ * Call: spen [-n|-b|-o|-o1|-o2] file.smt
  */
 int
 main (int argc, char **argv)

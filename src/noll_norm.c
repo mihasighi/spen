@@ -279,7 +279,11 @@ noll_normalize_iter (noll_sat_t * fsat)
                   if ((type_i != NOLL_TYP_VOID) &&
                       (type_j != NOLL_TYP_VOID) && (type_i != type_j))
                     {
-                      //variables of different types
+#ifndef NDEBUG
+                      fprintf (stdout, "New inequality between %s and %s (diff types)\n",
+			       noll_vector_at (fsat->form->lvars, i)->vname,
+			       noll_vector_at (fsat->form->lvars, j)->vname);
+#endif
                       noll_pure_matrix_at (fsat->form->pure, i, j) =
                         NOLL_PURE_NEQ;
                     }
@@ -360,7 +364,7 @@ noll_normalize (noll_form_t * form, char *fname, bool incr, bool destructive)
    */
   if (noll_option_get_verb () > 0)
     {
-      fprintf (stdout, "      * build the boolean abstraction ...");
+      fprintf (stdout, "      * build the boolean abstraction ...\n");
       fflush (stdout);
     }
   noll_sat_t *fsat = noll2sat (form, fname);
@@ -383,8 +387,13 @@ noll_normalize (noll_form_t * form, char *fname, bool incr, bool destructive)
       /*
        * Check the implied (in)equalities.
        */
-      if (noll_option_get_verb () > 0)
-        fprintf (stdout, "      * infer implied (in)equalities ...");
+      if (noll_option_get_verb () > 0) {
+        fprintf (stdout, "      * infer implied (in)equalities ...\n");
+#ifndef NDEBUG
+        fprintf (stdout, "        on formula:\n");
+        noll_form_fprint (stdout, form);
+#endif
+      }
       if (incr == true)
         noll_normalize_incr (fsat);
       else
@@ -396,5 +405,9 @@ noll_normalize (noll_form_t * form, char *fname, bool incr, bool destructive)
       noll_sat_free (fsat);
       return NULL;
     }
+#ifndef NDEBUG
+  fprintf(stdout, "      * normalized formula:\n");
+  noll_form_fprint(stdout, form);
+#endif
   return fsat;
 }

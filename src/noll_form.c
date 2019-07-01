@@ -1112,13 +1112,13 @@ noll_pure_fprint (FILE * f, noll_var_array * lvars, noll_pure_t * phi)
         switch (noll_pure_matrix_at (phi, l, c))
           {
           case NOLL_PURE_EQ:
-            fprintf (f, "=");
+            fprintf (f, "==");
             break;
           case NOLL_PURE_NEQ:
             fprintf (f, "<>");
             break;
           default:
-            fprintf (f, "#");
+            fprintf (f, "?=");
             break;
           }
         fprintf (f, "%s, ", noll_var_name (lvars, c, NOLL_TYP_RECORD));
